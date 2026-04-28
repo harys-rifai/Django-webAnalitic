@@ -519,16 +519,6 @@
         <div class="filter-bar">
             <form method="GET" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
                 <div class="filter-group">
-                    <label for="year">Year:</label>
-                    <select name="year" id="year" onchange="this.form.submit()">
-                        <option value="">All Years</option>
-                        {% for year in available_years %}
-                        <option value="{{ year }}" {% if filter_year == year|stringformat:"i" %}selected{% endif %}>{{ year }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
                     <label for="month">Month:</label>
                     <select name="month" id="month" onchange="this.form.submit()">
                         <option value="">All Months</option>

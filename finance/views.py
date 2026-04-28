@@ -84,24 +84,23 @@ def dashboard(request):
     from datetime import datetime, timedelta
     import calendar
 
+    # Get app version
+    app_version = AppVersions.objects.order_by('-created_at').first()
+    app_version_str = app_version.version if app_version else '1.0.0'
+
     # Get filter parameters
-    filter_year = request.GET.get('year', str(datetime.now().year))
     filter_month = request.GET.get('month', str(datetime.now().month))
     filter_day = request.GET.get('day', '')
 
     # Parse filters
     try:
-        filter_year_int = int(filter_year)
         filter_month_int = int(filter_month)
     except:
-        filter_year_int = datetime.now().year
         filter_month_int = datetime.now().month
 
     # Build date filter
     date_filter = {}
-    if filter_year_int:
-        date_filter['year'] = filter_year_int
-    if filter_month_int:
+    if filter_month:
         date_filter['month'] = filter_month_int
     if filter_day:
         try:
@@ -114,9 +113,8 @@ def dashboard(request):
     available_years = PurchaseRequests.objects.annotate(year=ExtractYear('created_at')).values_list('year', flat=True).distinct().order_by('-year')
     available_years = [y for y in available_years if y]
 
-    # Get app version
-    app_version = AppVersions.objects.order_by('-created_at').first()
-    app_version_str = app_version.version if app_version else '1.0.0'
+    # Get available months for filter
+    available_months = [(str(i), calendar.month_name[i]) for i in range(1, 13)]
 
     # Base context
     context = {
@@ -125,11 +123,10 @@ def dashboard(request):
         'python_version': sys.version.split()[0],
         'db_name': 'moao_db',
         'app_version': app_version_str,
-        'filter_year': filter_year,
         'filter_month': filter_month,
         'filter_day': filter_day,
         'available_years': available_years,
-        'available_months': [(str(i), calendar.month_name[i]) for i in range(1, 13)],
+        'available_months': available_months,
     }
 
     # Role-based analytics
@@ -139,10 +136,6 @@ def dashboard(request):
         po_query = PurchaseOrders.objects.all()
         receipts_query = MaterialReceipts.objects.all()
 
-        if filter_year:
-            pr_query = pr_query.filter(created_at__year=filter_year_int)
-            po_query = po_query.filter(created_at__year=filter_year_int)
-            receipts_query = receipts_query.filter(received_at__year=filter_year_int)
         if filter_month:
             pr_query = pr_query.filter(created_at__month=filter_month_int)
             po_query = po_query.filter(created_at__month=filter_month_int)
@@ -175,27 +168,27 @@ def dashboard(request):
         context['low_stock_items'] = Stocks.objects.filter(active=True, low_stock=True).count()
         context['recent_stocks'] = Stocks.objects.select_related('asset', 'user').order_by('-created_at')[:10]
 
-        # Monthly PR trends (last 6 months) with filter
+        # Monthly PR trends (last 12 months)
         from django.db.models.functions import TruncMonth
-        monthly_pr = PurchaseRequests.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        monthly_pr = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
         context['monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr]
         context['monthly_pr_data'] = [item['count'] for item in monthly_pr]
 
         # Monthly PR approved
-        monthly_pr_approved = PurchaseRequests.objects.filter(created_at__year=filter_year_int, status='approved').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        monthly_pr_approved = PurchaseRequests.objects.filter(status='approved').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
         context['monthly_pr_approved_data'] = [item['count'] for item in monthly_pr_approved]
 
         # Monthly PR rejected
-        monthly_pr_rejected = PurchaseRequests.objects.filter(created_at__year=filter_year_int, status='rejected').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        monthly_pr_rejected = PurchaseRequests.objects.filter(status='rejected').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
         context['monthly_pr_rejected_data'] = [item['count'] for item in monthly_pr_rejected]
 
-        # Monthly PO value trends (revenue for CEO)
-        monthly_po = PurchaseOrders.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:12]
+        # Monthly PO value trends (revenue for CEO) - last 12 months
+        monthly_po = PurchaseOrders.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:12]
         context['monthly_po_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_po]
         context['monthly_po_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_po]
 
-        # Monthly PR value trends (expense for CEO)
-        monthly_pr_value = PurchaseRequests.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('estimated_price')).order_by('month')[:12]
+        # Monthly PR value trends (expense for CEO) - last 12 months
+        monthly_pr_value = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('estimated_price')).order_by('month')[:12]
         context['monthly_pr_value_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr_value]
         context['monthly_pr_value_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_pr_value]
     elif user_role == 'User' or 'requestor' in user_role.lower():
