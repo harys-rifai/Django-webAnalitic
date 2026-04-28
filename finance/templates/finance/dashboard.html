@@ -193,6 +193,51 @@
             margin-bottom: 20px;
         }
 
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -321,53 +366,91 @@
         </div>
 
         <div class="table-card">
-            <h3>Top Departments by Purchase Requests</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Department</th>
-                        <th>Code</th>
-                        <th>PR Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dept in dept_pr_count %}
-                    <tr>
-                        <td>{{ dept.name }}</td>
-                        <td>{{ dept.code }}</td>
-                        <td>{{ dept.pr_count }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="dept-pr">Departments PR</button>
+                <button class="tab-btn" data-tab="stocks">Stock Items</button>
+                <button class="tab-btn" data-tab="recent-pr">Recent PRs</button>
+            </div>
 
-        <div class="table-card">
-            <h3>Recent Stock Items</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>SKU</th>
-                        <th>Name</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in recent_stocks %}
-                    <tr>
-                        <td>{{ stock.sku|default:"-" }}</td>
-                        <td>{{ stock.name }}</td>
-                        <td>{{ stock.quantity }}</td>
-                        <td>Rp {{ stock.unit_price|floatformat:0 }}</td>
-                        <td>{{ stock.location|default:"-" }}</td>
-                        <td>{% if stock.low_stock %}<span class="status-badge status-rejected">Low</span>{% else %}<span class="status-badge status-approved">OK</span>{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div id="dept-pr" class="tab-content active">
+                <h3>Top Departments by Purchase Requests</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Code</th>
+                            <th>PR Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dept in dept_pr_count %}
+                        <tr>
+                            <td>{{ dept.name }}</td>
+                            <td>{{ dept.code }}</td>
+                            <td>{{ dept.pr_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="stocks" class="tab-content">
+                <h3>Recent Stock Items</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in recent_stocks %}
+                        <tr>
+                            <td>{{ stock.sku|default:"-" }}</td>
+                            <td>{{ stock.name }}</td>
+                            <td>{{ stock.quantity }}</td>
+                            <td>Rp {{ stock.unit_price|floatformat:0 }}</td>
+                            <td>{{ stock.location|default:"-" }}</td>
+                            <td>{% if stock.low_stock %}<span class="status-badge status-rejected">Low</span>{% else %}<span class="status-badge status-approved">OK</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="recent-pr" class="tab-content">
+                <h3>Recent Purchase Requests</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>User</th>
+                            <th>Department</th>
+                            <th>Qty</th>
+                            <th>Est. Price</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in recent_prs %}
+                        <tr>
+                            <td>{{ pr.item_name }}</td>
+                            <td>{{ pr.user.name }}</td>
+                            <td>{{ pr.department.name|default:"-" }}</td>
+                            <td>{{ pr.qty }}</td>
+                            <td>Rp {{ pr.estimated_price|floatformat:0 }}</td>
+                            <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
+                            <td>{{ pr.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
         {% endif %}
 
@@ -406,37 +489,97 @@
                 <canvas id="myMonthlyPRChart"></canvas>
             </div>
         </div>
-        {% endif %}
 
         <div class="table-card">
-            <h3>Recent Purchase Requests</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>User</th>
-                        <th>Department</th>
-                        <th>Qty</th>
-                        <th>Est. Price</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pr in recent_prs %}
-                    <tr>
-                        <td>{{ pr.item_name }}</td>
-                        <td>{{ pr.user.name }}</td>
-                        <td>{{ pr.department.name|default:"-" }}</td>
-                        <td>{{ pr.qty }}</td>
-                        <td>Rp {{ pr.estimated_price|floatformat:0 }}</td>
-                        <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
-                        <td>{{ pr.created_at|date:"Y-m-d" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="my-pr">My PRs</button>
+                <button class="tab-btn" data-tab="my-inventory">My Inventory</button>
+                <button class="tab-btn" data-tab="all-pr">All Recent PRs</button>
+            </div>
+
+            <div id="my-pr" class="tab-content active">
+                <h3>My Recent Purchase Requests</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Est. Price</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in recent_prs %}
+                        <tr>
+                            <td>{{ pr.item_name }}</td>
+                            <td>{{ pr.qty }}</td>
+                            <td>Rp {{ pr.estimated_price|floatformat:0 }}</td>
+                            <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
+                            <td>{{ pr.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="my-inventory" class="tab-content">
+                <h3>My Inventory Items</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in my_stocks %}
+                        <tr>
+                            <td>{{ stock.name }}</td>
+                            <td>{{ stock.quantity }}</td>
+                            <td>Rp {{ stock.unit_price|floatformat:0 }}</td>
+                            <td>{{ stock.location|default:"-" }}</td>
+                            <td>{% if stock.low_stock %}<span class="status-badge status-rejected">Low</span>{% else %}<span class="status-badge status-approved">OK</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="all-pr" class="tab-content">
+                <h3>All Recent Purchase Requests</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>User</th>
+                            <th>Department</th>
+                            <th>Qty</th>
+                            <th>Est. Price</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in recent_prs %}
+                        <tr>
+                            <td>{{ pr.item_name }}</td>
+                            <td>{{ pr.user.name }}</td>
+                            <td>{{ pr.department.name|default:"-" }}</td>
+                            <td>{{ pr.qty }}</td>
+                            <td>Rp {{ pr.estimated_price|floatformat:0 }}</td>
+                            <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
+                            <td>{{ pr.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+        {% endif %}
     </div>
 
     <div class="footer">
@@ -444,6 +587,21 @@
     </div>
 
     <script>
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+
+                // Remove active class from all tabs and contents
+                this.closest('.table-card').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.closest('.table-card').querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
         // Make stat cards interactive
         document.querySelectorAll('.stat-card').forEach(card => {
             card.addEventListener('click', function() {
