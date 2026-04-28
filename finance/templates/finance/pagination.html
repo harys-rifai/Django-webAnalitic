@@ -1,0 +1,29 @@
+{% if page_obj.has_other_pages %}
+<div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; padding: 15px;">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if filter_month %}&month={{ filter_month }}{% endif %}{% if filter_day %}&day={{ filter_day }}{% endif %}" 
+           style="padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">
+            &laquo; Previous
+        </a>
+    {% else %}
+        <span style="padding: 8px 16px; background: #e0e0e0; color: #999; border-radius: 6px; font-size: 13px; cursor: not-allowed;">
+            &laquo; Previous
+        </span>
+    {% endif %}
+
+    <span style="padding: 8px 16px; background: white; border: 2px solid #667eea; color: #667eea; border-radius: 6px; font-size: 13px; font-weight: 600;">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if filter_month %}&month={{ filter_month }}{% endif %}{% if filter_day %}&day={{ filter_day }}{% endif %}" 
+           style="padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600;">
+            Next &raquo;
+        </a>
+    {% else %}
+        <span style="padding: 8px 16px; background: #e0e0e0; color: #999; border-radius: 6px; font-size: 13px; cursor: not-allowed;">
+            Next &raquo;
+        </span>
+    {% endif %}
+</div>
+{% endif %}

@@ -10,7 +10,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 - **Login Page**: Custom login using existing Laravel users table
 - **Bcrypt Support**: Compatible with Laravel's bcrypt hashed passwords
 - **Session Management**: Django session-based authentication
-- **Role-Based Access**: Admin, CEO, and User roles from existing `role_user` table
+- **Role-Based Access**: Admin, CEO, Manager, User, and Requestor roles from existing `role_user` table
 - **Logout**: Secure session cleanup
 
 ### Header & Title
@@ -20,7 +20,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 
 ### Role-Based Dashboard Analytics
 
-#### Admin & CEO View (Full Access)
+#### Admin & CEO View (Full Access - All Data)
 ![Admin Dashboard](https://via.placeholder.com/800x600/667eea/ffffff?text=Admin+Dashboard)
 
 **Interactive Colored Stat Cards:**
@@ -38,14 +38,48 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 - 📊 Assets by Condition (Bar chart)
 - 📈 Monthly PR Trends (Line chart)
 - 📊 Monthly PO Value (Bar chart)
+- 📈 Revenue vs Expense Chart
 
 **Data Tables:**
 - Top 5 departments by purchase requests
 - Recent stock items with low-stock alerts
 - Recent purchase requests
 
-#### Regular User View (Personal Data)
+**Export:** Full data export to CSV and Power BI
+
+---
+
+#### Manager View (Company-Wide Data)
+![Manager Dashboard](https://via.placeholder.com/800x600/764ba2/ffffff?text=Manager+Dashboard)
+
+**Access:** All data from their company (all departments)
+
+**Interactive Colored Stat Cards:**
+- 🔵 **Company Users** (Blue)
+- 🟢 **Company PRs** (Green)
+- 🟣 **Company POs** (Purple)
+- 🟠 **Company Assets** (Orange)
+- 🔵 **Company PO Value** (Teal)
+- 🔴 **Company Stock Items** (Red)
+
+**Charts & Graphs:**
+- 📊 PR Status by Status (Doughnut chart)
+- 📈 Monthly PR Trends (Line chart)
+- 📊 Company Assets by Condition (Bar chart)
+
+**Data Tables:**
+- Department PR counts within company
+- Recent company purchase requests
+- Company stock items
+
+**Export:** Company-wide data export to CSV and Power BI
+
+---
+
+#### Regular User / Requestor View (Personal + Department Data)
 ![User Dashboard](https://via.placeholder.com/800x600/28a745/ffffff?text=User+Dashboard)
+
+**Access:** Own data + their department's data
 
 **Interactive Colored Stat Cards:**
 - 🔵 **My Purchase Requests** (Blue)
@@ -170,9 +204,11 @@ python3 manage.py runserver 0.0.0.0:8000
 1. Access the dashboard at **http://127.0.0.1:8000/**
 2. Login with existing Laravel app credentials (email + password)
 3. Dashboard analytics are automatically filtered by user role:
-   - **Admin/CEO**: See all company data and analytics
-   - **User/Requestor**: See only personal data and requests
-4. View Python version, database info, and app version in page footers
+   - **Admin/CEO**: See ALL data across all companies and departments
+   - **Manager**: See data from their company only (all departments)
+   - **User/Requestor**: See own data + their department's data
+4. Export data to CSV or Power BI (role-based filtering applied)
+5. View Python version, database info, and app version in page footers
 
 ## Pages
 
@@ -202,9 +238,21 @@ sales_dashboard/
 ## Role Detection
 
 User roles are determined by querying the `role_user` table joined with `roles` table:
-- Roles from `roles` table (e.g., 'admin', 'ceo', 'User', 'requestor')
+- Roles from `roles` table (e.g., 'admin', 'ceo', 'manager', 'User', 'requestor')
 - Stored in session upon login
-- Dashboard content adapts based on role
+- Dashboard content adapts based on role:
+
+| Role | Data Access Level |
+|------|-------------------|
+| Admin/CEO | Full access - all companies, all departments |
+| Manager | Company-wide - all departments in their company |
+| User/Requestor | Personal + department data only |
+
+## Data Filtering Logic
+
+- **Admin/CEO**: `PurchaseRequests.objects.all()` - no filtering
+- **Manager**: `PurchaseRequests.objects.filter(department__company=user_company)`
+- **User**: `Q(user_id=user_id) | Q(department=user_department)`
 
 ## Notes
 

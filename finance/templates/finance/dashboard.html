@@ -506,7 +506,7 @@
         <div class="user-info">
             <span class="role-badge">{{ user_role }}</span>
             <span>{{ user_name }}</span>
-            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+            <a href="{% url 'logout' %}%}" class="logout-btn">Logout</a>
         </div>
     </div>
 
@@ -524,7 +524,7 @@
                         <option value="">All Months</option>
                         {% for month_num, month_name in available_months %}
                         <option value="{{ month_num }}" {% if filter_month == month_num %}selected{% endif %}>{{ month_name }}</option>
-                        {% endfor %}
+                        {% endfor %} 
                     </select>
                 </div>
 
@@ -538,16 +538,16 @@
             </form>
 
             <div class="action-buttons">
-                <a href="{% url 'export_csv' %}" class="action-btn export-btn">
+                <a href="{% url 'export_csv' %}%}" class="action-btn export-btn">
                     📊 Export CSV
                 </a>
-                <a href="{% url 'share_teams' %}" class="action-btn share-teams-btn">
+                <a href="{% url 'share_teams' %}%}" class="action-btn share-teams-btn">
                     💬 Share Teams
                 </a>
-                <a href="{% url 'share_chat' %}" class="action-btn share-chat-btn">
+                <a href="{% url 'share_chat' %}%}" class="action-btn share-chat-btn">
                     💬 Share Chat
                 </a>
-                <a href="{% url 'power_bi_export' %}" class="action-btn powerbi-btn">
+                <a href="{% url 'power_bi_export' %}%}" class="action-btn powerbi-btn">
                     📈 Power BI
                 </a>
             </div>
@@ -592,6 +592,14 @@
 
         <div class="charts-compact">
             <div class="chart-small">
+                <h3>My PR Status</h3>
+                <canvas id="ceoPRStatusChart"></canvas>
+            </div>
+            <div class="chart-small">
+                <h3>My Monthly Trends</h3>
+                <canvas id="ceoMonthlyPRChart"></canvas>
+            </div>
+            <div class="chart-small">
                 <h3>PR vs Approved vs Rejected</h3>
                 <canvas id="monthlyPRChart"></canvas>
             </div>
@@ -626,13 +634,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for dept in dept_pr_count %}
+                        {% for dept in dept_pr_count %} %}
                         <tr>
                             <td>{{ dept.name }}</td>
                             <td>{{ dept.code }}</td>
                             <td>{{ dept.pr_count }}</td>
                         </tr>
-                        {% endfor %}
+                        {% endfor %} 
                     </tbody>
                 </table>
             </div>
@@ -651,7 +659,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for stock in recent_stocks %}
+                        {% for stock in recent_stocks_page.object_list %}
                         <tr>
                             <td>{{ stock.sku|default:"-" }}</td>
                             <td>{{ stock.name }}</td>
@@ -663,6 +671,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                {% include "finance/pagination.html" with page_obj=recent_stocks_page %}
             </div>
 
             <div id="recent-pr" class="tab-content">
@@ -680,7 +689,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in recent_prs %}
+                        {% for pr in recent_prs_page.object_list %}
                         <tr>
                             <td>{{ pr.item_name }}</td>
                             <td>{{ pr.user.name }}</td>
@@ -690,9 +699,10 @@
                             <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
                             <td>{{ pr.created_at|date:"Y-m-d" }}</td>
                         </tr>
-                        {% endfor %}
+                        {% endfor %} 
                     </tbody>
                 </table>
+                {% include "finance/pagination.html" with page_obj=recent_prs_page %}
             </div>
         </div>
         {% endif %}
@@ -753,7 +763,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in recent_prs %}
+                        {% for pr in recent_prs_page.object_list %} %}
                         <tr>
                             <td>{{ pr.item_name }}</td>
                             <td>{{ pr.qty }}</td>
@@ -761,9 +771,10 @@
                             <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
                             <td>{{ pr.created_at|date:"Y-m-d" }}</td>
                         </tr>
-                        {% endfor %}
+                        {% endfor %} 
                     </tbody>
                 </table>
+                {% include "finance/pagination.html" with page_obj=recent_prs_page %}
             </div>
 
             <div id="my-inventory" class="tab-content">
@@ -779,7 +790,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for stock in my_stocks %}
+                        {% for stock in my_stocks_page.object_list %}
                         <tr>
                             <td>{{ stock.name }}</td>
                             <td>{{ stock.quantity }}</td>
@@ -790,6 +801,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                {% include "finance/pagination.html" with page_obj=my_stocks_page %}
             </div>
 
             <div id="all-pr" class="tab-content">
@@ -807,7 +819,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in recent_prs %}
+                        {% for pr in recent_prs_page.object_list %}
                         <tr>
                             <td>{{ pr.item_name }}</td>
                             <td>{{ pr.user.name }}</td>
@@ -817,12 +829,13 @@
                             <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
                             <td>{{ pr.created_at|date:"Y-m-d" }}</td>
                         </tr>
-                        {% endfor %}
+                        {% endfor %} 
                     </tbody>
                 </table>
+                {% include "finance/pagination.html" with page_obj=recent_prs_page %}
             </div>
         </div>
-        {% endif %}
+        {% endif %} 
     </div>
 
     <div class="footer">
@@ -869,9 +882,9 @@
         });
     </script>
 
-    {% if user_role == 'admin' or user_role == 'ceo' %}
+    {% if user_role == 'admin' or user_role == 'ceo' or 'manager' in user_role.lower %}
     <script>
-        // PR Status Chart
+        // PR Status Chart (CEO/Admin/Manager)
         {% if pr_by_status %}
         new Chart(document.getElementById('prStatusChart').getContext('2d'), {
             type: 'doughnut',
@@ -886,7 +899,27 @@
         });
         {% endif %}
 
-        // Asset Condition Chart
+        // Monthly PR Trends Chart (CEO/Admin/Manager)
+        {% if monthly_pr_labels %}
+        new Chart(document.getElementById('monthlyPRChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ monthly_pr_labels|safe }},
+                datasets: [{
+                    label: 'Purchase Requests',
+                    data: {{ monthly_pr_data|safe }},
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+        {% endif %}
+
+        // Asset Condition Chart (CEO/Admin only)
+        {% if user_role == 'admin' or user_role == 'ceo' %}
         {% if assets_by_condition %}
         new Chart(document.getElementById('assetConditionChart').getContext('2d'), {
             type: 'bar',
@@ -900,105 +933,34 @@
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         {% endif %}
-
-        // Monthly PR Trends (multi-line chart)
-        {% if monthly_pr_labels %}
-        new Chart(document.getElementById('monthlyPRChart').getContext('2d'), {
-            type: 'line',
-            data: {
-                labels: [{% for label in monthly_pr_labels %}'{{ label }}',{% endfor %}],
-                datasets: [
-                    {
-                        label: 'PR Requests',
-                        data: [{% for value in monthly_pr_data %}{{ value }},{% endfor %}],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'PR Approved',
-                        data: [{% for value in monthly_pr_approved_data %}{{ value }},{% endfor %}],
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'PR Rejected',
-                        data: [{% for value in monthly_pr_rejected_data %}{{ value }},{% endfor %}],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'PO Value',
-                        data: [{% for value in monthly_po_data %}{{ value }},{% endfor %}],
-                        borderColor: '#764ba2',
-                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Count' } },
-                    y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'PO Value (Rp)' }, grid: { drawOnChartArea: false } }
-                }
-            }
-        });
         {% endif %}
 
-        // Revenue vs Expense Chart (CEO)
-        {% if monthly_po_data %}
-        new Chart(document.getElementById('revenueExpenseChart').getContext('2d'), {
+        // Monthly PO Value Chart (CEO/Admin only)
+        {% if user_role == 'admin' or user_role == 'ceo' %}
+        {% if monthly_po_labels %}
+        new Chart(document.getElementById('monthlyPOChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: [{% for label in monthly_po_labels %}'{{ label }}',{% endfor %}],
-                datasets: [
-                    {
-                        label: 'Revenue (PO Value)',
-                        data: [{% for value in monthly_po_data %}{{ value }},{% endfor %}],
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Expense (PR Value)',
-                        data: [{% for value in monthly_pr_value_data %}{{ value }},{% endfor %}],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        yAxisID: 'y'
-                    }
-                ]
+                labels: {{ monthly_po_labels|safe }},
+                datasets: [{
+                    label: 'PO Value',
+                    data: {{ monthly_po_data|safe }},
+                    borderColor: '#764ba2',
+                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Amount (Rp)' } }
-                }
-            }
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
         });
+        {% endif %}
         {% endif %}
     </script>
     {% endif %}
 
-    {% if user_role == 'User' or 'requestor' in user_role.lower %}
+    {% if user_role == 'User' or 'requestor' in user_role.lower or 'manager' in user_role.lower %}
     <script>
-        // My PR Status Chart
+        // My PR Status Chart (User/Requestor/Manager)
         {% if my_pr_by_status %}
         new Chart(document.getElementById('myPRStatusChart').getContext('2d'), {
             type: 'doughnut',
@@ -1013,15 +975,15 @@
         });
         {% endif %}
 
-        // My Monthly PR Trends
+        // My Monthly PR Trends (User/Requestor/Manager)
         {% if my_monthly_pr_labels %}
         new Chart(document.getElementById('myMonthlyPRChart').getContext('2d'), {
             type: 'line',
             data: {
-                labels: [{% for label in my_monthly_pr_labels %}'{{ label }}',{% endfor %}],
+                labels: {{ my_monthly_pr_labels|safe }},
                 datasets: [{
-                    label: 'My Purchase Requests',
-                    data: [{% for value in my_monthly_pr_data %}{{ value }},{% endfor %}],
+                    label: 'Purchase Requests',
+                    data: {{ my_monthly_pr_data|safe }},
                     borderColor: '#28a745',
                     backgroundColor: 'rgba(40, 167, 69, 0.1)',
                     tension: 0.4,
@@ -1031,7 +993,6 @@
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         {% endif %}
-
     </script>
     {% endif %}
 </body>
