@@ -15,6 +15,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 
 #### Admin & CEO View (Full Access)
 - **Summary Statistics**: Active users, total PRs, POs, assets, stock items, low stock alerts
+- **Interactive Stat Cards**: Small, clickable cards with hover effects and click-to-detail
 - **Financial Analytics**: Total PO value, monthly receipts
 - **Visual Charts**:
   - Purchase Requests by Status (Doughnut chart)
@@ -26,6 +27,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 
 #### Regular User View (Personal Data)
 - **Personal Statistics**: My PRs, pending approvals, approved requests, personal inventory count
+- **Interactive Stat Cards**: Compact, animated cards with hover effects
 - **Financial**: My total request value
 - **Personal Data Tables**:
   - My recent purchase requests with status badges

@@ -83,29 +83,44 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-left-color: #667eea;
         }
 
         .stat-card h3 {
             color: #666;
-            font-size: 14px;
+            font-size: 11px;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
         }
 
         .stat-card .value {
-            font-size: 32px;
+            font-size: 22px;
             font-weight: bold;
             color: #667eea;
+            line-height: 1.2;
         }
 
         .charts-grid {
@@ -422,6 +437,33 @@
     <div class="footer">
         <p>Python {{ python_version }} | Database: {{ db_name }} | App Version: {{ app_version }}</p>
     </div>
+
+    <script>
+        // Make stat cards interactive
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const value = this.querySelector('.value').textContent;
+                const label = this.querySelector('h3').textContent;
+                alert(label + ': ' + value);
+            });
+
+            // Add tooltip on hover
+            card.title = 'Click for details';
+        });
+
+        // Add subtle animation on page load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.stat-card').forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        });
+    </script>
 
     {% if user_role == 'admin' or user_role == 'ceo' %}
     <script>
