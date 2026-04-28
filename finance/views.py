@@ -12,9 +12,9 @@ from .models import (Users, PurchaseRequests, PurchaseOrders, Assets,
 def get_user_role(user_id):
     try:
         role_user = RoleUser.objects.filter(user_id=user_id).select_related('role').first()
-        return role_user.role.name if role_user else 'User'
+        return role_user.role.name.lower() if role_user else 'user'
     except:
-        return 'User'
+        return 'user'
 
 def login_view(request):
     if request.method == 'POST':
@@ -78,7 +78,7 @@ def dashboard(request):
 
     user_name = request.session.get('user_name', 'User')
     user_id = request.session.get('user_id')
-    user_role = request.session.get('user_role', 'User')
+    user_role = request.session.get('user_role', 'user')
 
     from django.db.models import Count, Sum
     from datetime import datetime, timedelta
@@ -88,7 +88,7 @@ def dashboard(request):
     app_version = AppVersions.objects.order_by('-created_at').first()
     app_version_str = app_version.version if app_version else '1.0.0'
 
-    # Get filter parameters
+    # Get filter parameters (only month/day)
     filter_month = request.GET.get('month', str(datetime.now().month))
     filter_day = request.GET.get('day', '')
 
@@ -98,15 +98,39 @@ def dashboard(request):
     except:
         filter_month_int = datetime.now().month
 
-    # Build date filter
-    date_filter = {}
-    if filter_month:
-        date_filter['month'] = filter_month_int
-    if filter_day:
-        try:
-            date_filter['day'] = int(filter_day)
-        except:
-            pass
+    # Get available months for filter
+    available_months = [(str(i), calendar.month_name[i]) for i in range(1, 13)]
+
+    # Base context
+    context = {
+        'user_name': user_name,
+        'user_role': user_role,
+        'python_version': sys.version.split()[0],
+        'db_name': 'moao_db',
+        'app_version': app_version_str,
+        'filter_month': filter_month,
+        'filter_day': filter_day,
+        'available_months': available_months,
+    }
+
+    # Role-based analytics
+    if user_role == 'admin' or user_role == 'ceo':
+        # Apply month/day filters only
+        pr_query = PurchaseRequests.objects.all()
+        po_query = PurchaseOrders.objects.all()
+        receipts_query = MaterialReceipts.objects.all()
+
+        if filter_month:
+            pr_query = pr_query.filter(created_at__month=filter_month_int)
+            po_query = po_query.filter(created_at__month=filter_month_int)
+            receipts_query = receipts_query.filter(received_at__month=filter_month_int)
+        if filter_day:
+            try:
+                pr_query = pr_query.filter(created_at__day=int(filter_day))
+                po_query = po_query.filter(created_at__day=int(filter_day))
+                receipts_query = receipts_query.filter(received_at__day=int(filter_day))
+            except:
+                pass
 
     # Get available years for filter
     from django.db.models.functions import ExtractYear
@@ -131,7 +155,7 @@ def dashboard(request):
 
     # Role-based analytics
     if user_role == 'admin' or user_role == 'ceo':
-        # Apply filters to querysets
+        # Apply filters only for month/day (not year)
         pr_query = PurchaseRequests.objects.all()
         po_query = PurchaseOrders.objects.all()
         receipts_query = MaterialReceipts.objects.all()

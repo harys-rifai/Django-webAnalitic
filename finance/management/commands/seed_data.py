@@ -24,7 +24,7 @@ class Command(BaseCommand):
             depts = [None]
 
         # Statuses
-        statuses = ['pending', 'approved', 'rejected', 'po_created', 'approved_ceo']
+        statuses = ['pending', 'approved_line', 'approved_ceo', 'po_created', 'received', 'rejected']
 
         # Generate data from Jan 2025 to Dec 2026
         start_date = datetime(2025, 1, 1)
@@ -36,6 +36,7 @@ class Command(BaseCommand):
 
         self.stdout.write('Generating Purchase Requests and Orders...')
 
+        created_count = 0
         while current_date <= end_date:
             # Generate 5-20 PRs per month
             for _ in range(random.randint(5, 20)):
@@ -52,9 +53,13 @@ class Command(BaseCommand):
                         status=random.choice(statuses),
                         created_at=current_date.replace(day=random.randint(1, 28)),
                         updated_at=current_date.replace(day=random.randint(1, 28)),
-                        department=dept
+                        department=dept,
+                        unit='unit',
+                        is_header=False,
+                        is_grouped=False
                     )
                     pr_count += 1
+                    created_count += 1
 
                     # Create PO for some PRs
                     if random.choice([True, False]) and pr.status in ['approved', 'approved_ceo']:
@@ -72,6 +77,7 @@ class Command(BaseCommand):
                             pass
 
                 except Exception as e:
+                    self.stdout.write(f'Error: {e}')
                     pass
 
             # Move to next month
@@ -80,6 +86,7 @@ class Command(BaseCommand):
             else:
                 current_date = current_date.replace(month=current_date.month + 1)
 
+        self.stdout.write(f'Created {created_count} new PRs')
         self.stdout.write(self.style.SUCCESS('Successfully seeded data from Jan 2025 to Dec 2026!'))
         self.stdout.write(f'Total PRs: {PurchaseRequests.objects.count()}')
         self.stdout.write(f'Total POs: {PurchaseOrders.objects.count()}')
