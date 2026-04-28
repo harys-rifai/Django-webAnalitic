@@ -79,7 +79,38 @@ def dashboard(request):
     user_role = request.session.get('user_role', 'User')
 
     from django.db.models import Count, Sum
-    from datetime import datetime
+    from datetime import datetime, timedelta
+    import calendar
+
+    # Get filter parameters
+    filter_year = request.GET.get('year', str(datetime.now().year))
+    filter_month = request.GET.get('month', str(datetime.now().month))
+    filter_day = request.GET.get('day', '')
+
+    # Parse filters
+    try:
+        filter_year_int = int(filter_year)
+        filter_month_int = int(filter_month)
+    except:
+        filter_year_int = datetime.now().year
+        filter_month_int = datetime.now().month
+
+    # Build date filter
+    date_filter = {}
+    if filter_year_int:
+        date_filter['year'] = filter_year_int
+    if filter_month_int:
+        date_filter['month'] = filter_month_int
+    if filter_day:
+        try:
+            date_filter['day'] = int(filter_day)
+        except:
+            pass
+
+    # Get available years for filter
+    from django.db.models.functions import ExtractYear
+    available_years = PurchaseRequests.objects.annotate(year=ExtractYear('created_at')).values_list('year', flat=True).distinct().order_by('-year')
+    available_years = [y for y in available_years if y]
 
     # Get app version
     app_version = AppVersions.objects.order_by('-created_at').first()
@@ -92,36 +123,64 @@ def dashboard(request):
         'python_version': sys.version.split()[0],
         'db_name': 'moao_db',
         'app_version': app_version_str,
+        'filter_year': filter_year,
+        'filter_month': filter_month,
+        'filter_day': filter_day,
+        'available_years': available_years,
+        'available_months': [(str(i), calendar.month_name[i]) for i in range(1, 13)],
     }
 
     # Role-based analytics
     if user_role == 'admin' or user_role == 'ceo':
-        # Admin and CEO see everything
+        # Apply filters to querysets
+        pr_query = PurchaseRequests.objects.all()
+        po_query = PurchaseOrders.objects.all()
+        receipts_query = MaterialReceipts.objects.all()
+
+        if filter_year:
+            pr_query = pr_query.filter(created_at__year=filter_year_int)
+            po_query = po_query.filter(created_at__year=filter_year_int)
+            receipts_query = receipts_query.filter(received_at__year=filter_year_int)
+        if filter_month:
+            pr_query = pr_query.filter(created_at__month=filter_month_int)
+            po_query = po_query.filter(created_at__month=filter_month_int)
+            receipts_query = receipts_query.filter(received_at__month=filter_month_int)
+        if filter_day:
+            try:
+                pr_query = pr_query.filter(created_at__day=int(filter_day))
+                po_query = po_query.filter(created_at__day=int(filter_day))
+                receipts_query = receipts_query.filter(received_at__day=int(filter_day))
+            except:
+                pass
+
         context['total_users'] = Users.objects.filter(active=True).count()
-        context['total_purchase_requests'] = PurchaseRequests.objects.count()
-        context['total_purchase_orders'] = PurchaseOrders.objects.count()
+        context['total_purchase_requests'] = pr_query.count()
+        context['total_purchase_orders'] = po_query.count()
         context['total_assets'] = Assets.objects.count()
-        context['total_po_value'] = PurchaseOrders.objects.aggregate(total=Sum('total_price'))['total'] or 0
-        context['pr_by_status'] = list(PurchaseRequests.objects.values('status').annotate(count=Count('id')))
-        context['recent_prs'] = PurchaseRequests.objects.select_related('user', 'department').order_by('-created_at')[:10]
+        context['total_po_value'] = po_query.aggregate(total=Sum('total_price'))['total'] or 0
+        context['pr_by_status'] = list(pr_query.values('status').annotate(count=Count('id')))
+        context['recent_prs'] = pr_query.select_related('user', 'department').order_by('-created_at')[:10]
         context['dept_pr_count'] = Departments.objects.annotate(pr_count=Count('purchaserequests')).order_by('-pr_count')[:5]
-        today = datetime.now()
-        first_day_month = today.replace(day=1)
-        context['monthly_receipts'] = MaterialReceipts.objects.filter(received_at__gte=first_day_month).count()
+
+        # Monthly filter for receipts
+        first_day_month = datetime(filter_year_int, filter_month_int, 1)
+        next_month = first_day_month.replace(day=28) + timedelta(days=4)
+        last_day_month = next_month - timedelta(days=next_month.day)
+        context['monthly_receipts'] = receipts_query.filter(received_at__range=(first_day_month, last_day_month)).count()
+
         context['assets_by_condition'] = list(Assets.objects.values('condition').annotate(count=Count('id'), total_value=Sum('purchase_price')))
-        # Stock data for admin
         context['total_stock_items'] = Stocks.objects.filter(active=True).count()
         context['low_stock_items'] = Stocks.objects.filter(active=True, low_stock=True).count()
         context['recent_stocks'] = Stocks.objects.select_related('asset', 'user').order_by('-created_at')[:10]
 
-        # Monthly PR trends (last 6 months)
+        # Monthly PR trends (last 6 months) with filter
         from django.db.models.functions import TruncMonth
-        monthly_pr = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        monthly_pr = PurchaseRequests.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
         context['monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr]
         context['monthly_pr_data'] = [item['count'] for item in monthly_pr]
 
-        # Monthly PO value trends (last 6 months)
-        monthly_po = PurchaseOrders.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:6]
+        # Monthly PO value trends
+        monthly_po = PurchaseOrders.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:6]
         context['monthly_po_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_po]
         context['monthly_po_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_po]
     elif user_role == 'User' or 'requestor' in user_role.lower():

@@ -94,6 +94,90 @@
             border-left: 5px solid #667eea;
         }
 
+        .filter-bar {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #333;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-group select:hover,
+        .filter-group input:hover {
+            border-color: #667eea;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .reset-btn {
+            padding: 8px 20px;
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .reset-btn:hover {
+            background: #e0e0e0;
+        }
+
         .welcome h2 {
             color: #1a1a1a;
             margin-bottom: 8px;
@@ -363,6 +447,38 @@
         <div class="welcome">
             <h2>Welcome, {{ user_name }}!</h2>
             <p>Role: <strong>{{ user_role }}</strong></p>
+        </div>
+
+        <div class="filter-bar">
+            <form method="GET" style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                <div class="filter-group">
+                    <label for="year">Year:</label>
+                    <select name="year" id="year" onchange="this.form.submit()">
+                        <option value="">All Years</option>
+                        {% for year in available_years %}
+                        <option value="{{ year }}" {% if filter_year == year|stringformat:"i" %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="month">Month:</label>
+                    <select name="month" id="month" onchange="this.form.submit()">
+                        <option value="">All Months</option>
+                        {% for month_num, month_name in available_months %}
+                        <option value="{{ month_num }}" {% if filter_month == month_num %}selected{% endif %}>{{ month_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="day">Day:</label>
+                    <input type="number" name="day" id="day" min="1" max="31" value="{{ filter_day }}" placeholder="Day" style="width: 80px;">
+                </div>
+
+                <button type="submit" class="filter-btn">Apply Filter</button>
+                <a href="{% url 'dashboard' %}" class="reset-btn">Reset</a>
+            </form>
         </div>
 
         {% if user_role == 'admin' or user_role == 'ceo' %}
