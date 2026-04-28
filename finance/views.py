@@ -1,8 +1,18 @@
 import bcrypt
+import sys
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import Users, PurchaseRequests, PurchaseOrders, Assets, MaterialReceipts, Departments
+from django.db import connection
+from .models import (Users, PurchaseRequests, PurchaseOrders, Assets,
+                     MaterialReceipts, Departments, Stocks, Roles,
+                     RoleUser, AppVersions)
 
+def get_user_role(user_id):
+    try:
+        role_user = RoleUser.objects.filter(user_id=user_id).select_related('role').first()
+        return role_user.role.name if role_user else 'User'
+    except:
+        return 'User'
 
 def login_view(request):
     if request.method == 'POST':
@@ -18,6 +28,7 @@ def login_view(request):
                         request.session['user_id'] = user.id
                         request.session['user_name'] = user.name
                         request.session['user_email'] = user.email
+                        request.session['user_role'] = get_user_role(user.id)
                         messages.success(request, f'Welcome back, {user.name}!')
                         return redirect('dashboard')
                     else:
@@ -30,6 +41,7 @@ def login_view(request):
                         request.session['user_id'] = user.id
                         request.session['user_name'] = user.name
                         request.session['user_email'] = user.email
+                        request.session['user_role'] = get_user_role(user.id)
                         messages.success(request, f'Welcome back, {user.name}!')
                         return redirect('dashboard')
                     else:
@@ -39,7 +51,17 @@ def login_view(request):
         except Users.DoesNotExist:
             messages.error(request, 'Invalid email or password.')
 
-    return render(request, 'finance/login.html')
+    # Get Python version and DB info for login page
+    python_version = sys.version.split()[0]
+    db_name = 'moao_db'
+    app_version = AppVersions.objects.order_by('-created_at').first()
+    app_version_str = app_version.version if app_version else '1.0.0'
+
+    return render(request, 'finance/login.html', {
+        'python_version': python_version,
+        'db_name': db_name,
+        'app_version': app_version_str,
+    })
 
 
 def logout_view(request):
@@ -54,51 +76,58 @@ def dashboard(request):
 
     user_name = request.session.get('user_name', 'User')
     user_id = request.session.get('user_id')
+    user_role = request.session.get('user_role', 'User')
 
     from django.db.models import Count, Sum
     from datetime import datetime
 
-    # Summary statistics
-    total_users = Users.objects.filter(active=True).count()
-    total_purchase_requests = PurchaseRequests.objects.count()
-    total_purchase_orders = PurchaseOrders.objects.count()
-    total_assets = Assets.objects.count()
+    # Get app version
+    app_version = AppVersions.objects.order_by('-created_at').first()
+    app_version_str = app_version.version if app_version else '1.0.0'
 
-    # Purchase requests by status
-    pr_by_status = PurchaseRequests.objects.values('status').annotate(count=Count('id'))
-
-    # Total purchase value
-    total_po_value = PurchaseOrders.objects.aggregate(total=Sum('total_price'))['total'] or 0
-
-    # Recent purchase requests
-    recent_prs = PurchaseRequests.objects.select_related('user', 'department').order_by('-created_at')[:10]
-
-    # Top departments by PR count
-    dept_pr_count = Departments.objects.annotate(pr_count=Count('purchaserequests')).order_by('-pr_count')[:5]
-
-    # Material receipts this month
-    today = datetime.now()
-    first_day_month = today.replace(day=1)
-    monthly_receipts = MaterialReceipts.objects.filter(received_at__gte=first_day_month).count()
-
-    # Asset value by condition
-    assets_by_condition = Assets.objects.values('condition').annotate(
-        count=Count('id'),
-        total_value=Sum('purchase_price')
-    )
-
+    # Base context
     context = {
         'user_name': user_name,
-        'total_users': total_users,
-        'total_purchase_requests': total_purchase_requests,
-        'total_purchase_orders': total_purchase_orders,
-        'total_assets': total_assets,
-        'total_po_value': total_po_value,
-        'pr_by_status': list(pr_by_status),
-        'recent_prs': recent_prs,
-        'dept_pr_count': dept_pr_count,
-        'monthly_receipts': monthly_receipts,
-        'assets_by_condition': list(assets_by_condition),
+        'user_role': user_role,
+        'python_version': sys.version.split()[0],
+        'db_name': 'moao_db',
+        'app_version': app_version_str,
     }
+
+    # Role-based analytics
+    if user_role == 'admin' or user_role == 'ceo':
+        # Admin and CEO see everything
+        context['total_users'] = Users.objects.filter(active=True).count()
+        context['total_purchase_requests'] = PurchaseRequests.objects.count()
+        context['total_purchase_orders'] = PurchaseOrders.objects.count()
+        context['total_assets'] = Assets.objects.count()
+        context['total_po_value'] = PurchaseOrders.objects.aggregate(total=Sum('total_price'))['total'] or 0
+        context['pr_by_status'] = list(PurchaseRequests.objects.values('status').annotate(count=Count('id')))
+        context['recent_prs'] = PurchaseRequests.objects.select_related('user', 'department').order_by('-created_at')[:10]
+        context['dept_pr_count'] = Departments.objects.annotate(pr_count=Count('purchaserequests')).order_by('-pr_count')[:5]
+        today = datetime.now()
+        first_day_month = today.replace(day=1)
+        context['monthly_receipts'] = MaterialReceipts.objects.filter(received_at__gte=first_day_month).count()
+        context['assets_by_condition'] = list(Assets.objects.values('condition').annotate(count=Count('id'), total_value=Sum('purchase_price')))
+        # Stock data for admin
+        context['total_stock_items'] = Stocks.objects.filter(active=True).count()
+        context['low_stock_items'] = Stocks.objects.filter(active=True, low_stock=True).count()
+        context['recent_stocks'] = Stocks.objects.select_related('asset', 'user').order_by('-created_at')[:10]
+    elif user_role == 'User' or 'requestor' in user_role.lower():
+        # Regular users see only their data
+        user_prs = PurchaseRequests.objects.filter(user_id=user_id)
+        context['my_pr_count'] = user_prs.count()
+        context['my_pr_pending'] = user_prs.filter(status='pending').count()
+        context['my_pr_approved'] = user_prs.filter(status='approved').count()
+        context['my_total_value'] = user_prs.aggregate(total=Sum('estimated_price'))['total'] or 0
+        context['recent_prs'] = user_prs.select_related('department').order_by('-created_at')[:10]
+        # User's stocks/inventory
+        context['my_stocks'] = Stocks.objects.filter(user_id=user_id, active=True).order_by('-created_at')[:10]
+        context['my_stock_count'] = Stocks.objects.filter(user_id=user_id, active=True).count()
+    else:
+        # Default user view
+        user_prs = PurchaseRequests.objects.filter(user_id=user_id)
+        context['my_pr_count'] = user_prs.count()
+        context['recent_prs'] = user_prs.order_by('-created_at')[:5]
 
     return render(request, 'finance/dashboard.html', context)
