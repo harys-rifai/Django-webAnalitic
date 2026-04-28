@@ -135,6 +135,15 @@ def dashboard(request):
         # User's stocks/inventory
         context['my_stocks'] = Stocks.objects.filter(user_id=user_id, active=True).order_by('-created_at')[:10]
         context['my_stock_count'] = Stocks.objects.filter(user_id=user_id, active=True).count()
+
+        # User-specific charts data
+        my_pr_by_status = user_prs.values('status').annotate(count=Count('id'))
+        context['my_pr_by_status'] = list(my_pr_by_status)
+
+        from django.db.models.functions import TruncMonth
+        my_monthly_pr = user_prs.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        context['my_monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in my_monthly_pr]
+        context['my_monthly_pr_data'] = [item['count'] for item in my_monthly_pr]
     else:
         # Default user view
         user_prs = PurchaseRequests.objects.filter(user_id=user_id)

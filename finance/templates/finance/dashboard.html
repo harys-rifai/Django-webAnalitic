@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sales Dashboard</title>
+    <title>Dashboard - Data Analytic</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -31,6 +31,14 @@
 
         .header h1 {
             font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1::before {
+            content: "📊";
+            font-size: 28px;
         }
 
         .user-info {
@@ -242,7 +250,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Sales Dashboard</h1>
+        <h1>Data Analytic</h1>
         <div class="user-info">
             <span class="role-badge">{{ user_role }}</span>
             <span>{{ user_name }}</span>
@@ -366,83 +374,42 @@
         {% if user_role == 'User' or 'requestor' in user_role.lower %}
         <!-- Regular User View -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card blue">
                 <h3>My Purchase Requests</h3>
                 <div class="value">{{ my_pr_count }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card orange">
                 <h3>Pending Approval</h3>
                 <div class="value">{{ my_pr_pending }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card green">
                 <h3>Approved</h3>
                 <div class="value">{{ my_pr_approved }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card purple">
                 <h3>My Total Value</h3>
                 <div class="value">Rp {{ my_total_value|floatformat:0 }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card teal">
                 <h3>My Inventory</h3>
                 <div class="value">{{ my_stock_count }}</div>
             </div>
         </div>
 
-        <div class="table-card">
-            <h3>My Recent Purchase Requests</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item</th>
-                        <th>Qty</th>
-                        <th>Est. Price</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pr in recent_prs %}
-                    <tr>
-                        <td>{{ pr.item_name }}</td>
-                        <td>{{ pr.qty }}</td>
-                        <td>Rp {{ pr.estimated_price|floatformat:0 }}</td>
-                        <td><span class="status-badge status-{{ pr.status }}">{{ pr.status }}</span></td>
-                        <td>{{ pr.created_at|date:"Y-m-d" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="table-card">
-            <h3>My Inventory Items</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in my_stocks %}
-                    <tr>
-                        <td>{{ stock.name }}</td>
-                        <td>{{ stock.quantity }}</td>
-                        <td>Rp {{ stock.unit_price|floatformat:0 }}</td>
-                        <td>{{ stock.location|default:"-" }}</td>
-                        <td>{% if stock.low_stock %}<span class="status-badge status-rejected">Low</span>{% else %}<span class="status-badge status-approved">OK</span>{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>My PR Status Distribution</h3>
+                <canvas id="myPRStatusChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>My Monthly PR Trends</h3>
+                <canvas id="myMonthlyPRChart"></canvas>
+            </div>
         </div>
         {% endif %}
 
         <div class="table-card">
-            <h3>Recent Purchase Requests (All)</h3>
+            <h3>Recent Purchase Requests</h3>
             <table>
                 <thead>
                     <tr>
@@ -484,8 +451,6 @@
                 const label = this.querySelector('h3').textContent;
                 alert(label + ': ' + value);
             });
-
-            // Add tooltip on hover
             card.title = 'Click for details';
         });
 
@@ -507,8 +472,7 @@
     <script>
         // PR Status Chart
         {% if pr_by_status %}
-        const prStatusCtx = document.getElementById('prStatusChart').getContext('2d');
-        new Chart(prStatusCtx, {
+        new Chart(document.getElementById('prStatusChart').getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: [{% for item in pr_by_status %}'{{ item.status }}',{% endfor %}],
@@ -517,17 +481,13 @@
                     backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'],
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'bottom' } }
-            }
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
         });
         {% endif %}
 
         // Asset Condition Chart
         {% if assets_by_condition %}
-        const assetConditionCtx = document.getElementById('assetConditionChart').getContext('2d');
-        new Chart(assetConditionCtx, {
+        new Chart(document.getElementById('assetConditionChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: [{% for item in assets_by_condition %}'{{ item.condition }}',{% endfor %}],
@@ -536,18 +496,13 @@
                     backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8'],
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         {% endif %}
 
-        // Monthly PR Trends (Line Chart)
+        // Monthly PR Trends
         {% if monthly_pr_labels %}
-        const monthlyPRCtx = document.getElementById('monthlyPRChart').getContext('2d');
-        new Chart(monthlyPRCtx, {
+        new Chart(document.getElementById('monthlyPRChart').getContext('2d'), {
             type: 'line',
             data: {
                 labels: [{% for label in monthly_pr_labels %}'{{ label }}',{% endfor %}],
@@ -560,18 +515,13 @@
                     fill: true
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         {% endif %}
 
-        // Monthly PO Value (Bar Chart)
+        // Monthly PO Value
         {% if monthly_po_labels %}
-        const monthlyPOCtx = document.getElementById('monthlyPOChart').getContext('2d');
-        new Chart(monthlyPOCtx, {
+        new Chart(document.getElementById('monthlyPOChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: [{% for label in monthly_po_labels %}'{{ label }}',{% endfor %}],
@@ -581,11 +531,45 @@
                     backgroundColor: '#764ba2',
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+        {% endif %}
+    </script>
+    {% endif %}
+
+    {% if user_role == 'User' or 'requestor' in user_role.lower %}
+    <script>
+        // My PR Status Chart
+        {% if my_pr_by_status %}
+        new Chart(document.getElementById('myPRStatusChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: [{% for item in my_pr_by_status %}'{{ item.status }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for item in my_pr_by_status %}{{ item.count }},{% endfor %}],
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'],
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+        {% endif %}
+
+        // My Monthly PR Trends
+        {% if my_monthly_pr_labels %}
+        new Chart(document.getElementById('myMonthlyPRChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [{% for label in my_monthly_pr_labels %}'{{ label }}',{% endfor %}],
+                datasets: [{
+                    label: 'My Purchase Requests',
+                    data: [{% for value in my_monthly_pr_data %}{{ value }},{% endfor %}],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
         {% endif %}
     </script>

@@ -1,6 +1,8 @@
-# Sales Dashboard - Django Web Analytics
+# Data Analytic - Django Web Analytics
 
-A Django-based web analytics dashboard connected to an existing PostgreSQL database (`moao_db`) originally used by a Laravel application. Features role-based analytics for Admin, CEO, and regular Users.
+A Django-based web analytics dashboard connected to an existing PostgreSQL database (`moao_db`) originally used by a Laravel application. Features role-based analytics for Admin, CEO, and regular Users with interactive charts and colored stat cards.
+
+![Dashboard Preview](https://via.placeholder.com/800x400/667eea/ffffff?text=Data+Analytic+Dashboard)
 
 ## Features
 
@@ -11,13 +13,75 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 - **Role-Based Access**: Admin, CEO, and User roles from existing `role_user` table
 - **Logout**: Secure session cleanup
 
+### Header & Title
+- **Title**: "Data Analytic" with 📊 icon
+- **Role Badge**: Shows current user role in header
+- **User Info**: Displays logged-in user name
+
 ### Role-Based Dashboard Analytics
 
 #### Admin & CEO View (Full Access)
-- **Summary Statistics**: Active users, total PRs, POs, assets, stock items, low stock alerts
-- **Interactive Stat Cards**: Small, clickable cards with hover effects and click-to-detail
-- **Financial Analytics**: Total PO value, monthly receipts
-- **Visual Charts**:
+![Admin Dashboard](https://via.placeholder.com/800x600/667eea/ffffff?text=Admin+Dashboard)
+
+**Interactive Colored Stat Cards:**
+- 🔵 **Active Users** (Blue)
+- 🟢 **Purchase Requests** (Green)
+- 🟣 **Purchase Orders** (Purple)
+- 🟠 **Total Assets** (Orange)
+- 🔵 **PO Value Total** (Teal)
+- 🔴 **Monthly Receipts** (Red)
+- 🔵 **Stock Items** (Blue)
+- 🔴 **Low Stock Items** (Red)
+
+**Charts & Graphs:**
+- 📊 Purchase Requests by Status (Doughnut chart)
+- 📊 Assets by Condition (Bar chart)
+- 📈 Monthly PR Trends (Line chart)
+- 📊 Monthly PO Value (Bar chart)
+
+**Data Tables:**
+- Top 5 departments by purchase requests
+- Recent stock items with low-stock alerts
+- Recent purchase requests
+
+#### Regular User View (Personal Data)
+![User Dashboard](https://via.placeholder.com/800x600/28a745/ffffff?text=User+Dashboard)
+
+**Interactive Colored Stat Cards:**
+- 🔵 **My Purchase Requests** (Blue)
+- 🟠 **Pending Approval** (Orange)
+- 🟢 **Approved** (Green)
+- 🟣 **My Total Value** (Purple)
+- 🔵 **My Inventory** (Teal)
+
+**Charts & Graphs:**
+- 📊 My PR Status Distribution (Doughnut chart)
+- 📈 My Monthly PR Trends (Line chart)
+
+**Personal Data Tables:**
+- My recent purchase requests with status badges
+- My inventory items with stock status
+
+### Stock & Inventory Management
+- **Stock Tracking**: View all stock items (Admin/CEO) or personal items (User)
+- **Low Stock Alerts**: Automatic detection and highlighting of low-stock items
+- **Stock Details**: SKU, name, quantity, unit price, location, condition
+
+### Version & System Info
+![Footer Info](https://via.placeholder.com/800x100/333333/ffffff?text=Footer+Version+Info)
+
+- **Login Page Footer**: Displays Python version, database name, and app version
+- **Dashboard Footer**: Shows Python version, database (`moao_db`), and app version from `app_versions` table
+- **App Version**: Dynamically fetched from `app_versions` table (falls back to '1.0.0')
+
+### Interactive UI Features
+- **Hover Effects**: Cards lift up with shadow on hover
+- **Click Interaction**: Click cards to see details
+- **Load Animation**: Staggered fade-in animation on page load
+- **Color Coding**: Each stat card type has unique color scheme
+- **Responsive Design**: Grid layout adapts to screen size
+
+### Database Models
   - Purchase Requests by Status (Doughnut chart)
   - Assets by Condition (Bar chart)
 - **Data Tables**:
