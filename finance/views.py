@@ -1,7 +1,9 @@
 import bcrypt
 import sys
+import csv
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import HttpResponse
 from django.db import connection
 from .models import (Users, PurchaseRequests, PurchaseOrders, Assets,
                      MaterialReceipts, Departments, Stocks, Roles,
@@ -216,3 +218,81 @@ def dashboard(request):
         context['recent_prs'] = user_prs.order_by('-created_at')[:5]
 
     return render(request, 'finance/dashboard.html', context)
+
+
+def export_csv(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    user_role = request.session.get('user_role', 'User')
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="dashboard_data.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Type', 'Item', 'Quantity', 'Price', 'Status', 'Date'])
+
+    if user_role == 'admin' or user_role == 'ceo':
+        prs = PurchaseRequests.objects.select_related('user', 'department').order_by('-created_at')[:100]
+        for pr in prs:
+            writer.writerow(['PR', pr.item_name, pr.qty, pr.estimated_price, pr.status, pr.created_at])
+    else:
+        user_id = request.session.get('user_id')
+        prs = PurchaseRequests.objects.filter(user_id=user_id).order_by('-created_at')[:50]
+        for pr in prs:
+            writer.writerow(['PR', pr.item_name, pr.qty, pr.estimated_price, pr.status, pr.created_at])
+
+    return response
+
+
+def share_teams(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    user_name = request.session.get('user_name', 'User')
+    dashboard_url = request.build_absolute_uri('/dashboard/')
+
+    # Generate Teams share link (deep link)
+    teams_url = f"msteams://teams.microsoft.com/l/chat/0/0?users=&message=Check%20out%20this%20dashboard:%20{dashboard_url}"
+
+    return redirect(teams_url)
+
+
+def share_chat(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    dashboard_url = request.build_absolute_uri('/dashboard/')
+    chat_url = f"https://wa.me/?text=Check%20out%20this%20dashboard:%20{dashboard_url}"
+
+    return redirect(chat_url)
+
+
+def power_bi_export(request):
+    if not request.session.get('user_id'):
+        return redirect('login')
+
+    user_role = request.session.get('user_role', 'User')
+
+    # Generate Power BI compatible data
+    response = HttpResponse(content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename="power_bi_data.json"'
+
+    import json
+    from django.http import JsonResponse
+    from django.db.models import Count, Sum
+
+    data = {}
+
+    if user_role == 'admin' or user_role == 'ceo':
+        pr_by_status = list(PurchaseRequests.objects.values('status').annotate(count=Count('id')))
+        data['pr_by_status'] = pr_by_status
+        data['total_pr'] = PurchaseRequests.objects.count()
+        data['total_po'] = PurchaseOrders.objects.count()
+        data['total_assets'] = Assets.objects.count()
+    else:
+        user_id = request.session.get('user_id')
+        my_prs = PurchaseRequests.objects.filter(user_id=user_id)
+        data['my_pr_count'] = my_prs.count()
+        data['my_pr_by_status'] = list(my_prs.values('status').annotate(count=Count('id')))
+
+    return JsonResponse(data)

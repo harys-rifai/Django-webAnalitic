@@ -98,12 +98,57 @@
             background: white;
             padding: 20px 25px;
             border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
             margin-bottom: 30px;
             display: flex;
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .share-teams-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .share-chat-btn {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            color: white;
+        }
+
+        .powerbi-btn {
+            background: linear-gradient(135deg, #f2c811 0%, #ffb900 100%);
+            color: #333;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .filter-group {
@@ -479,6 +524,21 @@
                 <button type="submit" class="filter-btn">Apply Filter</button>
                 <a href="{% url 'dashboard' %}" class="reset-btn">Reset</a>
             </form>
+
+            <div class="action-buttons">
+                <a href="{% url 'export_csv' %}" class="action-btn export-btn">
+                    📊 Export CSV
+                </a>
+                <a href="{% url 'share_teams' %}" class="action-btn share-teams-btn">
+                    💬 Share Teams
+                </a>
+                <a href="{% url 'share_chat' %}" class="action-btn share-chat-btn">
+                    💬 Share Chat
+                </a>
+                <a href="{% url 'power_bi_export' %}" class="action-btn powerbi-btn">
+                    📈 Power BI
+                </a>
+            </div>
         </div>
 
         {% if user_role == 'admin' or user_role == 'ceo' %}
