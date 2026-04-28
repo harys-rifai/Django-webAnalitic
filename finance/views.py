@@ -113,6 +113,17 @@ def dashboard(request):
         context['total_stock_items'] = Stocks.objects.filter(active=True).count()
         context['low_stock_items'] = Stocks.objects.filter(active=True, low_stock=True).count()
         context['recent_stocks'] = Stocks.objects.select_related('asset', 'user').order_by('-created_at')[:10]
+
+        # Monthly PR trends (last 6 months)
+        from django.db.models.functions import TruncMonth
+        monthly_pr = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
+        context['monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr]
+        context['monthly_pr_data'] = [item['count'] for item in monthly_pr]
+
+        # Monthly PO value trends (last 6 months)
+        monthly_po = PurchaseOrders.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:6]
+        context['monthly_po_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_po]
+        context['monthly_po_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_po]
     elif user_role == 'User' or 'requestor' in user_role.lower():
         # Regular users see only their data
         user_prs = PurchaseRequests.objects.filter(user_id=user_id)

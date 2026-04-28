@@ -100,12 +100,42 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
         }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            border-radius: 0 0 0 60px;
+            opacity: 0.1;
+        }
+
+        .stat-card.blue { border-left-color: #667eea; }
+        .stat-card.blue::before { background: #667eea; }
+
+        .stat-card.green { border-left-color: #28a745; }
+        .stat-card.green::before { background: #28a745; }
+
+        .stat-card.orange { border-left-color: #ffc107; }
+        .stat-card.orange::before { background: #ffc107; }
+
+        .stat-card.red { border-left-color: #dc3545; }
+        .stat-card.red::before { background: #dc3545; }
+
+        .stat-card.purple { border-left-color: #764ba2; }
+        .stat-card.purple::before { background: #764ba2; }
+
+        .stat-card.teal { border-left-color: #17a2b8; }
+        .stat-card.teal::before { background: #17a2b8; }
 
         .stat-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            border-left-color: #667eea;
         }
 
         .stat-card h3 {
@@ -229,35 +259,35 @@
         {% if user_role == 'admin' or user_role == 'ceo' %}
         <!-- Admin/CEO View -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card blue">
                 <h3>Active Users</h3>
                 <div class="value">{{ total_users }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card green">
                 <h3>Purchase Requests</h3>
                 <div class="value">{{ total_purchase_requests }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card purple">
                 <h3>Purchase Orders</h3>
                 <div class="value">{{ total_purchase_orders }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card orange">
                 <h3>Total Assets</h3>
                 <div class="value">{{ total_assets }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card teal">
                 <h3>PO Value (Total)</h3>
                 <div class="value">Rp {{ total_po_value|floatformat:0 }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card red">
                 <h3>Receipts This Month</h3>
                 <div class="value">{{ monthly_receipts }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card blue">
                 <h3>Stock Items</h3>
                 <div class="value">{{ total_stock_items }}</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card red">
                 <h3>Low Stock Items</h3>
                 <div class="value">{{ low_stock_items }}</div>
             </div>
@@ -271,6 +301,14 @@
             <div class="chart-card">
                 <h3>Assets by Condition</h3>
                 <canvas id="assetConditionChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Monthly PR Trends</h3>
+                <canvas id="monthlyPRChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Monthly PO Value</h3>
+                <canvas id="monthlyPOChart"></canvas>
             </div>
         </div>
 
@@ -470,21 +508,18 @@
         // PR Status Chart
         {% if pr_by_status %}
         const prStatusCtx = document.getElementById('prStatusChart').getContext('2d');
-        const prStatusData = {
-            labels: [{% for item in pr_by_status %}'{{ item.status }}',{% endfor %}],
-            datasets: [{
-                data: [{% for item in pr_by_status %}{{ item.count }},{% endfor %}],
-                backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'],
-            }]
-        };
         new Chart(prStatusCtx, {
             type: 'doughnut',
-            data: prStatusData,
+            data: {
+                labels: [{% for item in pr_by_status %}'{{ item.status }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for item in pr_by_status %}{{ item.count }},{% endfor %}],
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'],
+                }]
+            },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
+                plugins: { legend: { position: 'bottom' } }
             }
         });
         {% endif %}
@@ -492,24 +527,64 @@
         // Asset Condition Chart
         {% if assets_by_condition %}
         const assetConditionCtx = document.getElementById('assetConditionChart').getContext('2d');
-        const assetConditionData = {
-            labels: [{% for item in assets_by_condition %}'{{ item.condition }}',{% endfor %}],
-            datasets: [{
-                data: [{% for item in assets_by_condition %}{{ item.count }},{% endfor %}],
-                backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8'],
-            }]
-        };
         new Chart(assetConditionCtx, {
             type: 'bar',
-            data: assetConditionData,
+            data: {
+                labels: [{% for item in assets_by_condition %}'{{ item.condition }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for item in assets_by_condition %}{{ item.count }},{% endfor %}],
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8'],
+                }]
+            },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: true }
-                }
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        {% endif %}
+
+        // Monthly PR Trends (Line Chart)
+        {% if monthly_pr_labels %}
+        const monthlyPRCtx = document.getElementById('monthlyPRChart').getContext('2d');
+        new Chart(monthlyPRCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for label in monthly_pr_labels %}'{{ label }}',{% endfor %}],
+                datasets: [{
+                    label: 'Purchase Requests',
+                    data: [{% for value in monthly_pr_data %}{{ value }},{% endfor %}],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        {% endif %}
+
+        // Monthly PO Value (Bar Chart)
+        {% if monthly_po_labels %}
+        const monthlyPOCtx = document.getElementById('monthlyPOChart').getContext('2d');
+        new Chart(monthlyPOCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for label in monthly_po_labels %}'{{ label }}',{% endfor %}],
+                datasets: [{
+                    label: 'PO Value (Rp)',
+                    data: [{% for value in monthly_po_data %}{{ value }},{% endfor %}],
+                    backgroundColor: '#764ba2',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
             }
         });
         {% endif %}
