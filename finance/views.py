@@ -189,10 +189,15 @@ def dashboard(request):
         monthly_pr_rejected = PurchaseRequests.objects.filter(created_at__year=filter_year_int, status='rejected').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
         context['monthly_pr_rejected_data'] = [item['count'] for item in monthly_pr_rejected]
 
-        # Monthly PO released (value)
-        monthly_po = PurchaseOrders.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:6]
+        # Monthly PO value trends (revenue for CEO)
+        monthly_po = PurchaseOrders.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:12]
         context['monthly_po_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_po]
         context['monthly_po_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_po]
+
+        # Monthly PR value trends (expense for CEO)
+        monthly_pr_value = PurchaseRequests.objects.filter(created_at__year=filter_year_int).annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('estimated_price')).order_by('month')[:12]
+        context['monthly_pr_value_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr_value]
+        context['monthly_pr_value_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_pr_value]
     elif user_role == 'User' or 'requestor' in user_role.lower():
         # Regular users see only their data
         user_prs = PurchaseRequests.objects.filter(user_id=user_id)
