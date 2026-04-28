@@ -157,12 +157,6 @@ def dashboard(request):
         context['recent_prs'] = pr_query.select_related('user', 'department').order_by('-created_at')[:10]
         context['dept_pr_count'] = Departments.objects.annotate(pr_count=Count('purchaserequests')).order_by('-pr_count')[:5]
 
-        # Monthly filter for receipts
-        first_day_month = datetime(filter_year_int, filter_month_int, 1)
-        next_month = first_day_month.replace(day=28) + timedelta(days=4)
-        last_day_month = next_month - timedelta(days=next_month.day)
-        context['monthly_receipts'] = receipts_query.filter(received_at__range=(first_day_month, last_day_month)).count()
-
         context['assets_by_condition'] = list(Assets.objects.values('condition').annotate(count=Count('id'), total_value=Sum('purchase_price')))
         context['total_stock_items'] = Stocks.objects.filter(active=True).count()
         context['low_stock_items'] = Stocks.objects.filter(active=True, low_stock=True).count()
