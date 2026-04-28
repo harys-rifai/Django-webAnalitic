@@ -213,12 +213,6 @@ def dashboard(request):
         my_monthly_pr = user_prs.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:6]
         context['my_monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in my_monthly_pr]
         context['my_monthly_pr_data'] = [item['count'] for item in my_monthly_pr]
-
-        # My stock status for chart
-        my_stocks_low = Stocks.objects.filter(user_id=user_id, active=True, low_stock=True).count()
-        my_stocks_ok = Stocks.objects.filter(user_id=user_id, active=True, low_stock=False).count()
-        context['my_stock_labels'] = ['Low Stock', 'OK']
-        context['my_stock_data'] = [my_stocks_low, my_stocks_ok]
     else:
         # Default user view
         user_prs = PurchaseRequests.objects.filter(user_id=user_id)

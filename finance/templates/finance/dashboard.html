@@ -723,10 +723,6 @@
                 <h3>My Monthly Trends</h3>
                 <canvas id="myMonthlyPRChart"></canvas>
             </div>
-            <div class="chart-small">
-                <h3>My Stock Status</h3>
-                <canvas id="myStockChart"></canvas>
-            </div>
         </div>
 
         <div class="table-card">
@@ -991,20 +987,6 @@
         });
         {% endif %}
 
-        // My Stock Status Chart
-        {% if my_stock_labels %}
-        new Chart(document.getElementById('myStockChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: [{% for label in my_stock_labels %}'{{ label }}',{% endfor %}],
-                datasets: [{
-                    data: [{% for value in my_stock_data %}{{ value }},{% endfor %}],
-                    backgroundColor: ['#dc3545', '#28a745'],
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-        {% endif %}
     </script>
     {% endif %}
 </body>
