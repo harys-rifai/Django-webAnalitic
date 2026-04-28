@@ -185,12 +185,17 @@ DATABASES = {
 }
 ```
 
-3. Run migrations (creates Django core tables):
+3. **For new deployment:** See [deploy_guide.md](deploy_guide.md) for complete deployment instructions including:
+   - Database schema migration using `finance/migrations/0001_initial.py`
+   - Data restoration using PostgreSQL dump
+   - Step-by-step deployment to another server
+
+4. Run migrations (creates Django core tables):
 ```bash
 python3 manage.py migrate
 ```
 
-4. Start the server:
+5. Start the server:
 ```bash
 ./run.sh
 ```
