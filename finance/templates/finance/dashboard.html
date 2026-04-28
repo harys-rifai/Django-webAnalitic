@@ -588,7 +588,7 @@
                 <canvas id="assetConditionChart"></canvas>
             </div>
             <div class="chart-small">
-                <h3>PR vs Approved vs PO</h3>
+                <h3>PR vs Approved vs PO Value</h3>
                 <canvas id="monthlyPRChart"></canvas>
             </div>
         </div>
@@ -910,7 +910,8 @@
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        yAxisID: 'y'
                     },
                     {
                         label: 'PR Approved',
@@ -918,7 +919,8 @@
                         borderColor: '#28a745',
                         backgroundColor: 'rgba(40, 167, 69, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        yAxisID: 'y'
                     },
                     {
                         label: 'PR Rejected',
@@ -926,22 +928,27 @@
                         borderColor: '#dc3545',
                         backgroundColor: 'rgba(220, 53, 69, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        yAxisID: 'y'
                     },
                     {
-                        label: 'PO Released',
+                        label: 'PO Value',
                         data: [{% for value in monthly_po_data %}{{ value }},{% endfor %}],
                         borderColor: '#764ba2',
                         backgroundColor: 'rgba(118, 75, 162, 0.1)',
                         tension: 0.4,
-                        fill: true
+                        fill: true,
+                        yAxisID: 'y1'
                     }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: { legend: { position: 'bottom' } },
-                scales: { y: { beginAtZero: true } }
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+                    y1: { beginAtZero: true, position: 'right', title: { display: true, text: 'PO Value (Rp)' }, grid: { drawOnChartArea: false } }
+                }
             }
         });
         {% endif %}
