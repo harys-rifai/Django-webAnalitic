@@ -188,25 +188,30 @@ def dashboard(request):
 
         # Monthly PR trends (last 12 months)
         from django.db.models.functions import TruncMonth
-        monthly_pr = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
+        monthly_pr = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('-month')[:12]
+        monthly_pr = list(monthly_pr)[::-1]  # Reverse to get chronological order
         context['monthly_pr_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr]
         context['monthly_pr_data'] = [item['count'] for item in monthly_pr]
 
         # Monthly PR approved
-        monthly_pr_approved = PurchaseRequests.objects.filter(status='approved').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
+        monthly_pr_approved = PurchaseRequests.objects.filter(status='approved_line').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('-month')[:12]
+        monthly_pr_approved = list(monthly_pr_approved)[::-1]
         context['monthly_pr_approved_data'] = [item['count'] for item in monthly_pr_approved]
 
         # Monthly PR rejected
-        monthly_pr_rejected = PurchaseRequests.objects.filter(status='rejected').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('month')[:12]
+        monthly_pr_rejected = PurchaseRequests.objects.filter(status='rejected').annotate(month=TruncMonth('created_at')).values('month').annotate(count=Count('id')).order_by('-month')[:12]
+        monthly_pr_rejected = list(monthly_pr_rejected)[::-1]
         context['monthly_pr_rejected_data'] = [item['count'] for item in monthly_pr_rejected]
 
         # Monthly PO value trends (revenue for CEO) - last 12 months
-        monthly_po = PurchaseOrders.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('month')[:12]
+        monthly_po = PurchaseOrders.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('total_price')).order_by('-month')[:12]
+        monthly_po = list(monthly_po)[::-1]
         context['monthly_po_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_po]
         context['monthly_po_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_po]
 
         # Monthly PR value trends (expense for CEO) - last 12 months
-        monthly_pr_value = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('estimated_price')).order_by('month')[:12]
+        monthly_pr_value = PurchaseRequests.objects.annotate(month=TruncMonth('created_at')).values('month').annotate(total=Sum('estimated_price')).order_by('-month')[:12]
+        monthly_pr_value = list(monthly_pr_value)[::-1]
         context['monthly_pr_value_labels'] = [item['month'].strftime('%b %Y') if item['month'] else '' for item in monthly_pr_value]
         context['monthly_pr_value_data'] = [float(item['total']) if item['total'] else 0 for item in monthly_pr_value]
     elif user_role == 'User' or 'requestor' in user_role.lower():
