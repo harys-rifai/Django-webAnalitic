@@ -251,10 +251,14 @@ def share_teams(request):
     user_name = request.session.get('user_name', 'User')
     dashboard_url = request.build_absolute_uri('/dashboard/')
 
-    # Generate Teams share link (deep link)
-    teams_url = f"msteams://teams.microsoft.com/l/chat/0/0?users=&message=Check%20out%20this%20dashboard:%20{dashboard_url}"
+    # Return a page with Teams share link
+    teams_url = f"https://teams.microsoft.com/l/chat/0/0?users=&message=Check%20out%20this%20dashboard:%20{dashboard_url}"
 
-    return redirect(teams_url)
+    return render(request, 'finance/share.html', {
+        'share_url': teams_url,
+        'platform': 'Microsoft Teams',
+        'user_name': user_name,
+    })
 
 
 def share_chat(request):
@@ -264,7 +268,11 @@ def share_chat(request):
     dashboard_url = request.build_absolute_uri('/dashboard/')
     chat_url = f"https://wa.me/?text=Check%20out%20this%20dashboard:%20{dashboard_url}"
 
-    return redirect(chat_url)
+    return render(request, 'finance/share.html', {
+        'share_url': chat_url,
+        'platform': 'WhatsApp',
+        'user_name': request.session.get('user_name', 'User'),
+    })
 
 
 def power_bi_export(request):
