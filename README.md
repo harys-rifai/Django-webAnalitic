@@ -2,7 +2,7 @@
 
 A Django-based web analytics dashboard connected to an existing PostgreSQL database (`moao_db`) originally used by a Laravel application. Features role-based analytics for Admin, CEO, and regular Users with interactive charts and colored stat cards.
 
-![Dashboard Preview](imgs/Screenshot%202026-04-29%20at%2000.21.33.png)
+![Dashboard Preview](imgs/Screenshot%202026-04-29%20at%2012.06.02.png)
 
 ## Features
 
@@ -21,7 +21,8 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ### Role-Based Dashboard Analytics
 
 #### Admin & CEO View (Full Access - All Data)
-![Admin Dashboard](imgs/Screenshot%202026-04-29%20at%2008.59.40.png)
+
+![CEO Dashboard](imgs/Screenshot%202026-04-29%20at%2012.06.02.png)
 
 **Interactive Colored Stat Cards:**
 - 🔵 **Active Users** (Blue)
@@ -50,6 +51,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ---
 
 #### Manager View (Company-Wide Data)
+
 ![Manager Dashboard](imgs/Screenshot%202026-04-29%20at%2009.05.04.png)
 
 **Access:** All data from their company (all departments)
@@ -77,7 +79,8 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ---
 
 #### Regular User / Requestor View (Personal + Department Data)
-![User Dashboard](imgs/Screenshot%202026-04-29%20at%2009.06.20.png)
+
+![User Dashboard](imgs/Screenshot%202026-04-29%20at%2012.06.54.png)
 
 **Access:** Own data + their department's data
 
