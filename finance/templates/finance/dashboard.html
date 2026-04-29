@@ -517,7 +517,7 @@
 
     <div class="container">
         <div class="welcome">
-            <h2>Welcome, {{ user_name }}!</h2>
+            <h2>Welcome, {{ user_name }}! <span style="font-size: 14px; color: #666;">{% now "l, F j, Y g:i A" %}</span></h2>
             <p>Role: <strong>{{ user_role }}</strong></p>
         </div>
 
@@ -605,20 +605,28 @@
 
         <div class="charts-compact">
             <div class="chart-small">
-                <h3>PR Status</h3>
-                <canvas id="prStatusChart"></canvas>
+                <h3>My PR Status</h3>
+                <canvas id="ceoPRStatusChart"></canvas>
             </div>
             <div class="chart-small">
-                <h3>Monthly PR Trends</h3>
+                <h3>My Monthly Trends</h3>
+                <canvas id="ceoMonthlyPRChart"></canvas>
+            </div>
+            <div class="chart-small">
+                <h3>PR vs Approved vs Rejected</h3>
                 <canvas id="monthlyPRChart"></canvas>
             </div>
             <div class="chart-small">
-                <h3>Asset Conditions</h3>
-                <canvas id="assetConditionChart"></canvas>
+                <h3>Revenue vs Expense (CEO)</h3>
+                <canvas id="revenueExpenseChart"></canvas>
             </div>
         </div>
 
         <div class="charts-grid">
+            <div class="chart-card">
+                <h3>Asset Conditions</h3>
+                <canvas id="assetConditionChart"></canvas>
+            </div>
             <div class="chart-card">
                 <h3>Monthly PO Value</h3>
                 <canvas id="monthlyPOChart"></canvas>
