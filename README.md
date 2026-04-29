@@ -35,11 +35,12 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 - 🔴 **Low Stock Items** (Red)
 
 **Charts & Graphs:**
-- 📊 Purchase Requests by Status (Doughnut chart)
+- 📊 My PR Status (Doughnut chart)
+- 📈 My Monthly Trends (Line chart)
+- 📊 PR vs Approved vs Rejected (Line chart - CEO/Admin)
+- 📈 Revenue vs Expense Chart (CEO - PR estimated vs PO actual)
 - 📊 Assets by Condition (Bar chart)
-- 📈 Monthly PR Trends (Line chart)
 - 📊 Monthly PO Value (Bar chart)
-- 📈 Revenue vs Expense Chart
 
 **Data Tables:**
 - Top 5 departments by purchase requests
@@ -112,11 +113,13 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 - **App Version**: Dynamically fetched from `app_versions` table (falls back to '1.0.0')
 
 ### Interactive UI Features
+- **Modern Stat Cards**: Compact design (70px height, 12px padding) with gradient background
 - **Hover Effects**: Cards lift up with shadow on hover
 - **Click Interaction**: Click cards to see details
 - **Load Animation**: Staggered fade-in animation on page load
-- **Color Coding**: Each stat card type has unique color scheme
-- **Responsive Design**: Grid layout adapts to screen size
+- **Color Coding**: Each stat card type has unique color scheme (blue, green, purple, orange, teal, red)
+- **Responsive Design**: Grid layout adapts to screen size (minmax 180px)
+- **Date/Time Display**: Welcome section shows current date/time
 
 ### Database Models
   - Purchase Requests by Status (Doughnut chart)
@@ -169,12 +172,19 @@ Connected to existing `moao_db` tables (read-only, `managed = False`):
 
 ## Recent Changes
 
-- **Dashboard Charts**: Fixed canvas ID mismatches to ensure interactive charts render properly across all views.
-- **Template Fixes**: Cleaned up stray Django template syntax (`%}`) and improved rendering logic in UI components.
-- **CEO/Admin Dashboard Enhancements**:
-  - Added new **Company Stocks** tab summarizing active stock items per company.
-  - Added **Company** and **Department** columns to the *Recent Stock Items* table, dynamically resolving relationships.
-  - Added new Stat Cards for **Total Tax** (calculated from Material Receipts PPN/PPH) and **Total Distributors**.
+### April 2026
+- **Dashboard Layout Fix**: Fixed `charts-compact` grid to 2-column layout (`repeat(2, 1fr)`) for better visual balance
+- **Chart Rendering Fix**: Fixed canvas ID mismatches between HTML and JavaScript - all 8 charts now render correctly (ceoPRStatusChart, ceoMonthlyPRChart, monthlyPRChart, revenueExpenseChart, assetConditionChart, monthlyPOChart, myPRStatusChart, myMonthlyPRChart)
+- **New Charts Added**: 
+  - PR vs Approved vs Rejected chart (monthly comparison)
+  - Revenue vs Expense chart (CEO view using PR estimated value vs PO actual value)
+- **Date/Time Display**: Added current date/time to welcome section (`{% now "l, F j, Y g:i A" %}`)
+- **Stat Cards Redesign**: Made stat cards more compact and modern:
+  - Reduced padding (12px), font sizes (value: 20px, title: 10px)
+  - Added subtle gradient background
+  - Smaller height (70px) with 3px border-left accent
+  - Reduced grid gap (12px) for tighter layout
+- **Views.py Fixes**: Fixed `TruncMonth('created_at')` parameter, `annotate` spelling, and status typos (`approved_ceo`, `rejected`)
 - **Images Added**: Embedded visual screenshots of the app's interfaces to the README.
 
 ## Installation
