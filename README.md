@@ -2,7 +2,7 @@
 
 A Django-based web analytics dashboard connected to an existing PostgreSQL database (`moao_db`) originally used by a Laravel application. Features role-based analytics for Admin, CEO, and regular Users with interactive charts and colored stat cards.
 
-![Dashboard Preview](https://via.placeholder.com/800x400/667eea/ffffff?text=Data+Analytic+Dashboard)
+![Dashboard Preview](imgs/Screenshot%202026-04-29%20at%2000.21.33.png)
 
 ## Features
 
@@ -21,7 +21,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ### Role-Based Dashboard Analytics
 
 #### Admin & CEO View (Full Access - All Data)
-![Admin Dashboard](https://via.placeholder.com/800x600/667eea/ffffff?text=Admin+Dashboard)
+![Admin Dashboard](imgs/Screenshot%202026-04-29%20at%2008.59.40.png)
 
 **Interactive Colored Stat Cards:**
 - 🔵 **Active Users** (Blue)
@@ -50,7 +50,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ---
 
 #### Manager View (Company-Wide Data)
-![Manager Dashboard](https://via.placeholder.com/800x600/764ba2/ffffff?text=Manager+Dashboard)
+![Manager Dashboard](imgs/Screenshot%202026-04-29%20at%2009.05.04.png)
 
 **Access:** All data from their company (all departments)
 
@@ -77,7 +77,7 @@ A Django-based web analytics dashboard connected to an existing PostgreSQL datab
 ---
 
 #### Regular User / Requestor View (Personal + Department Data)
-![User Dashboard](https://via.placeholder.com/800x600/28a745/ffffff?text=User+Dashboard)
+![User Dashboard](imgs/Screenshot%202026-04-29%20at%2009.06.20.png)
 
 **Access:** Own data + their department's data
 
@@ -163,6 +163,16 @@ Connected to existing `moao_db` tables (read-only, `managed = False`):
 - **Charts**: Chart.js
 - **Password Hashing**: bcrypt (compatible with Laravel)
 - **Python**: 3.9.6+
+
+## Recent Changes
+
+- **Dashboard Charts**: Fixed canvas ID mismatches to ensure interactive charts render properly across all views.
+- **Template Fixes**: Cleaned up stray Django template syntax (`%}`) and improved rendering logic in UI components.
+- **CEO/Admin Dashboard Enhancements**:
+  - Added new **Company Stocks** tab summarizing active stock items per company.
+  - Added **Company** and **Department** columns to the *Recent Stock Items* table, dynamically resolving relationships.
+  - Added new Stat Cards for **Total Tax** (calculated from Material Receipts PPN/PPH) and **Total Distributors**.
+- **Images Added**: Embedded visual screenshots of the app's interfaces to the README.
 
 ## Installation
 
