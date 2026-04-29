@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.db import connection
 from .models import (Users, PurchaseRequests, PurchaseOrders, Assets,
                      MaterialReceipts, Departments, Stocks, Roles,
-                     RoleUser, AppVersions)
+                     RoleUser, AppVersions, Distributors)
 
 def get_user_role(user_id):
     try:
@@ -129,6 +129,8 @@ def dashboard(request):
         current_user = Users.objects.get(id=user_id)
         user_company = current_user.company
         user_department = current_user.department
+        if user_company and user_company.logo:
+            context['company_logo'] = user_company.logo
     except Users.DoesNotExist:
         current_user = None
         user_company = None
@@ -160,6 +162,11 @@ def dashboard(request):
         context['total_assets'] = assets_query.count()
         context['total_po_value'] = po_query.aggregate(total=Sum('total_price'))['total'] or 0
         context['monthly_receipts'] = receipts_query.count()
+
+        tax_agg = receipts_query.aggregate(ppn=Sum('ppn_amount'), pph=Sum('pph_amount'))
+        context['total_tax'] = (tax_agg['ppn'] or 0) + (tax_agg['pph'] or 0)
+        context['total_distributor'] = Distributors.objects.filter(is_active=True).count()
+
         context['pr_by_status'] = list(pr_query.values('status').annotate(count=Count('id')))
 
         recent_prs_paginator = Paginator(pr_query.select_related('user', 'department').order_by('-created_at'), per_page)
@@ -170,11 +177,16 @@ def dashboard(request):
 
         context['dept_pr_count'] = Departments.objects.annotate(pr_count=Count('purchaserequests')).order_by('-pr_count')[:5]
 
+        context['company_stock_count'] = Stocks.objects.filter(active=True, user__company__isnull=False)\
+            .values('user__company__name', 'user__company__code')\
+            .annotate(stock_count=Count('id'))\
+            .order_by('-stock_count')
+
         context['assets_by_condition'] = list(assets_query.values('condition').annotate(count=Count('id'), total_value=Sum('purchase_price')))
         context['total_stock_items'] = stocks_query.count()
         context['low_stock_items'] = stocks_query.filter(low_stock=True).count()
 
-        stocks_paginator = Paginator(stocks_query.select_related('asset', 'user').order_by('-created_at'), per_page)
+        stocks_paginator = Paginator(stocks_query.select_related('asset', 'user', 'user__company').order_by('-created_at'), per_page)
         stocks_page = stocks_paginator.get_page(page_number)
         context['recent_stocks'] = stocks_page
         context['stocks_paginator'] = stocks_paginator

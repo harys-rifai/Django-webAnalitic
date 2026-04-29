@@ -502,11 +502,16 @@
 </head>
 <body>
     <div class="header">
-        <h1>Data Analytic</h1>
+        <h1>
+            {% if company_logo %}
+                <img src="{{ company_logo }}" alt="Logo" style="height: 32px; object-fit: contain; margin-right: 10px; border-radius: 4px;">
+            {% endif %}
+            Data Analytic
+        </h1>
         <div class="user-info">
             <span class="role-badge">{{ user_role }}</span>
             <span>{{ user_name }}</span>
-            <a href="{% url 'logout' %}%}" class="logout-btn">Logout</a>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
         </div>
     </div>
 
@@ -538,16 +543,16 @@
             </form>
 
             <div class="action-buttons">
-                <a href="{% url 'export_csv' %}%}" class="action-btn export-btn">
+                <a href="{% url 'export_csv' %}" class="action-btn export-btn">
                     📊 Export CSV
                 </a>
-                <a href="{% url 'share_teams' %}%}" class="action-btn share-teams-btn">
+                <a href="{% url 'share_teams' %}" class="action-btn share-teams-btn">
                     💬 Share Teams
                 </a>
-                <a href="{% url 'share_chat' %}%}" class="action-btn share-chat-btn">
+                <a href="{% url 'share_chat' %}" class="action-btn share-chat-btn">
                     💬 Share Chat
                 </a>
-                <a href="{% url 'power_bi_export' %}%}" class="action-btn powerbi-btn">
+                <a href="{% url 'power_bi_export' %}" class="action-btn powerbi-btn">
                     📈 Power BI
                 </a>
             </div>
@@ -588,24 +593,28 @@
                 <h3>Low Stock Items</h3>
                 <div class="value">{{ low_stock_items }}</div>
             </div>
+            <div class="stat-card purple">
+                <h3>Total Tax</h3>
+                <div class="value">Rp {{ total_tax|floatformat:0 }}</div>
+            </div>
+            <div class="stat-card green">
+                <h3>Total Distributor</h3>
+                <div class="value">{{ total_distributor }}</div>
+            </div>
         </div>
 
         <div class="charts-compact">
             <div class="chart-small">
-                <h3>My PR Status</h3>
-                <canvas id="ceoPRStatusChart"></canvas>
+                <h3>PR Status</h3>
+                <canvas id="prStatusChart"></canvas>
             </div>
             <div class="chart-small">
-                <h3>My Monthly Trends</h3>
-                <canvas id="ceoMonthlyPRChart"></canvas>
-            </div>
-            <div class="chart-small">
-                <h3>PR vs Approved vs Rejected</h3>
+                <h3>Monthly PR Trends</h3>
                 <canvas id="monthlyPRChart"></canvas>
             </div>
             <div class="chart-small">
-                <h3>Revenue vs Expense (CEO)</h3>
-                <canvas id="revenueExpenseChart"></canvas>
+                <h3>Asset Conditions</h3>
+                <canvas id="assetConditionChart"></canvas>
             </div>
         </div>
 
@@ -619,7 +628,8 @@
         <div class="table-card">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="dept-pr">Departments PR</button>
-                <button class="tab-btn" data-tab="stocks">Stock Items</button>
+                <button class="tab-btn" data-tab="comp-stocks">Company Stocks</button>
+                <button class="tab-btn" data-tab="stocks">Recent Stocks</button>
                 <button class="tab-btn" data-tab="recent-pr">Recent PRs</button>
             </div>
 
@@ -634,11 +644,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for dept in dept_pr_count %} %}
+                        {% for dept in dept_pr_count %}
                         <tr>
                             <td>{{ dept.name }}</td>
                             <td>{{ dept.code }}</td>
                             <td>{{ dept.pr_count }}</td>
+                        </tr>
+                        {% endfor %} 
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="comp-stocks" class="tab-content">
+                <h3>Top Companies by Stock Items</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Code</th>
+                            <th>Stock Items Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for comp in company_stock_count %}
+                        <tr>
+                            <td>{{ comp.user__company__name|default:"-" }}</td>
+                            <td>{{ comp.user__company__code|default:"-" }}</td>
+                            <td>{{ comp.stock_count }}</td>
                         </tr>
                         {% endfor %} 
                     </tbody>
@@ -650,6 +682,8 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Company</th>
+                            <th>Department</th>
                             <th>SKU</th>
                             <th>Name</th>
                             <th>Quantity</th>
@@ -659,8 +693,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for stock in recent_stocks_page.object_list %}
+                        {% for stock in stocks_page.object_list %}
                         <tr>
+                            <td>
+                                {% if stock.user and stock.user.company %}
+                                    {{ stock.user.company.name }}
+                                {% elif stock.asset and stock.asset.purchase_request and stock.asset.purchase_request.department and stock.asset.purchase_request.department.company %}
+                                    {{ stock.asset.purchase_request.department.company.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if stock.user and stock.user.department %}
+                                    {{ stock.user.department.name }}
+                                {% elif stock.asset and stock.asset.purchase_request and stock.asset.purchase_request.department %}
+                                    {{ stock.asset.purchase_request.department.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                             <td>{{ stock.sku|default:"-" }}</td>
                             <td>{{ stock.name }}</td>
                             <td>{{ stock.quantity }}</td>
@@ -671,7 +723,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                {% include "finance/pagination.html" with page_obj=recent_stocks_page %}
+                {% include "finance/pagination.html" with page_obj=stocks_page %}
             </div>
 
             <div id="recent-pr" class="tab-content">
@@ -763,7 +815,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in recent_prs_page.object_list %} %}
+                        {% for pr in recent_prs_page.object_list %}
                         <tr>
                             <td>{{ pr.item_name }}</td>
                             <td>{{ pr.qty }}</td>
